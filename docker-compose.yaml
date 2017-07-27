@@ -1,0 +1,67 @@
+version: "3"
+
+services:
+  nginx-proxy:
+    container_name: nginx-proxy
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  ghost:
+    container_name: ghost
+    image: ghost
+    volumes:
+       - ghost_data:/var/lib/ghost
+    environment:
+       - VIRTUAL_HOST=ghost.example.com
+       - VIRTUAL_PORT=2368
+    restart: always
+
+  wordpress:
+    container_name: wordpress
+    image: bitnami/wordpress:latest
+    volumes:
+      - wordpress_data:/bitnami/wordpress
+      - apache_data:/bitnami/apache
+      - php_data:/bitnami/php
+    environment:
+      - WORDPRESS_USERNAME=example
+      - WORDPRESS_PASSWORD=changeme
+      - WORDPRESS_EMAIL=foo@example.com
+      - WORDPRESS_FIRST_NAME=Foo
+      - WORDPRESS_LAST_NAME=Bar
+      - WORDPRESS_BLOG_NAME=Foo Blog
+      - WORDPRESS_DATABASE_PASSWORD=changeme
+      - WORDPRESS_DATABASE_USER=wpuser
+      - WORDPRESS_DATABASE_NAME=wp
+      - VIRTUAL_HOST: wordpress.example.com
+    depends_on:
+      - mariadb
+    restart: always
+
+  mariadb:
+    container_name: mariadb
+    image: bitnami/mariadb:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=no
+      - MARIADB_ROOT_PASSWORD=changeme
+      - MARIADB_DATABASE=wp
+      - MARIADB_USER=wpuser
+      - MARIADB_PASSWORD=changeme
+    volumes:
+      - mariadb_data:/bitnami/mariadb
+    restart: always
+
+volumes:
+  mariadb_data:
+    driver: local
+  wordpress_data:
+    driver: local
+  apache_data:
+    driver: local
+  php_data:
+    driver: local
+  ghost_data:
+    driver: local
